@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic
+mock-alchemy
+pytest
+httpx
+requests
+python-dotenv
+psycopg2-binary
