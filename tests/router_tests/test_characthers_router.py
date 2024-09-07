@@ -2,7 +2,7 @@ from unittest.mock import patch
 from app.services.characters_service import add_new_character
 
 
-@patch.object(add_new_character, "__call__")
+@patch("app.routers.characters_router.add_new_character")
 def test_create_character_valid_data(
     mock_add_new_character, client, mock_star_wars_character_read
 ):
