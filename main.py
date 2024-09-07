@@ -1,8 +1,8 @@
 from fastapi import FastAPI
+from app.routers.base import base_router
+from app.routers.characters import characters_router
 
 app = FastAPI()
 
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Star Wars API"}
+app.include_router(base_router)
+app.include_router(characters_router)
