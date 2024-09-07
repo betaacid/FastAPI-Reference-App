@@ -10,7 +10,10 @@ class StarWarsCharacterCreate(StarWarsCharacterBase):
     pass
 
 
+from typing import Optional
+
+
 class StarWarsCharacterRead(StarWarsCharacterBase):
     id: int
-    height: str
-    mass: str
+    height: Optional[str] = None
+    mass: Optional[str] = None

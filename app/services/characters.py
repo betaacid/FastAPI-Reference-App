@@ -12,6 +12,5 @@ def add_new_character(
         name=input_character.name,
         rating=input_character.rating,
         height="123",
-        mass="456",
     )
     return new_character
