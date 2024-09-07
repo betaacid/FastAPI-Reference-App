@@ -44,3 +44,17 @@ def mock_star_wars_character_read() -> StarWarsCharacterRead:
         rating=202,
         height="123",
     )
+
+
+@pytest.fixture
+def mock_swapi_response():
+    return {
+        "count": 1,
+        "results": [
+            {
+                "name": "Darth Vader",
+                "height": "202",
+                "mass": "136",
+            }
+        ],
+    }

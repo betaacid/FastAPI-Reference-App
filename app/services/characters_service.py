@@ -4,7 +4,6 @@ from app.schemas.star_wars_character import (
     StarWarsCharacterRead,
 )
 from app.models.star_wars_character import StarWarsCharacter
-from database import get_db_session
 from sqlalchemy.orm import Session
 
 

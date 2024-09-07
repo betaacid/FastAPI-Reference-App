@@ -9,3 +9,4 @@ httpx
 requests
 python-dotenv
 psycopg2-binary
+responses

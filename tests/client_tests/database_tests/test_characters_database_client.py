@@ -1,5 +1,4 @@
 from app.clients.database.characters_database_client import insert_new_character
-from app.schemas.star_wars_character import StarWarsCharacterCreate
 
 
 def test_insert_new_character(mock_db_session, mock_star_wars_character_create):
