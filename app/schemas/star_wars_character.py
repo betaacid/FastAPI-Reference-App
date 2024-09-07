@@ -3,7 +3,6 @@ from pydantic import BaseModel, ConfigDict
 
 class StarWarsCharacterBase(BaseModel):
     name: str
-    rating: int
 
 
 class StarWarsCharacterCreate(StarWarsCharacterBase):

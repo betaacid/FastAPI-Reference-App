@@ -32,7 +32,6 @@ def client(mock_db_session):
 def mock_star_wars_character_create() -> StarWarsCharacterCreate:
     return StarWarsCharacterCreate(
         name="Leia Organa",
-        rating=180,
     )
 
 
@@ -41,7 +40,6 @@ def mock_star_wars_character_read() -> StarWarsCharacterRead:
     return StarWarsCharacterRead(
         id=1,
         name="Darth Vader",
-        rating=202,
         height="123",
     )
 

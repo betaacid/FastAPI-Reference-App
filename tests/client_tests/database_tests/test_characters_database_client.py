@@ -9,7 +9,6 @@ def test_insert_new_character(mock_db_session, mock_star_wars_character_create):
 
     # Then:
     assert new_character.name == mock_star_wars_character_create.name
-    assert new_character.rating == mock_star_wars_character_create.rating
 
 
 def test_insert_new_character_session_methods_called(

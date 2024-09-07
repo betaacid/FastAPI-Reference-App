@@ -8,7 +8,6 @@ def insert_new_character(
 ) -> StarWarsCharacter:
     new_character = StarWarsCharacter(
         name=input_character.name,
-        rating=input_character.rating,
     )
     db.add(new_character)
     db.flush()
