@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.schemas.star_wars_character import (
     StarWarsCharacterCreate,
@@ -10,5 +10,7 @@ characters_router = APIRouter(prefix="/characters")
 
 
 @characters_router.post("/", response_model=StarWarsCharacterRead)
-def create_character(input_character: StarWarsCharacterCreate):
+async def create_character(
+    input_character: StarWarsCharacterCreate,
+) -> StarWarsCharacterRead:
     return add_new_character(input_character)
