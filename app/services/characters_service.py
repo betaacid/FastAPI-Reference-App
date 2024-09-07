@@ -5,18 +5,12 @@ from app.schemas.star_wars_character import (
 )
 from app.models.star_wars_character import StarWarsCharacter
 from database import get_db_session
+from sqlalchemy.orm import Session
 
 
 def add_new_character(
     input_character: StarWarsCharacterCreate,
+    db: Session,
 ) -> StarWarsCharacterRead:
-    with get_db_session() as db:
-        new_character: StarWarsCharacter = insert_new_character(db, input_character)
-
-        return StarWarsCharacterRead(
-            id=new_character.id,
-            name=new_character.name,
-            rating=new_character.rating,
-            height=new_character.height,
-            mass=new_character.mass,
-        )
+    new_character: StarWarsCharacter = insert_new_character(db, input_character)
+    return StarWarsCharacterRead.model_validate(new_character)

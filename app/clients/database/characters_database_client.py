@@ -12,6 +12,6 @@ def insert_new_character(
     )
     db.add(new_character)
     db.flush()
-
     db.refresh(new_character)
+    db.commit()
     return new_character
