@@ -4,7 +4,7 @@ from app.schemas.star_wars_character import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from app.services.characters import add_new_character
+from app.services.characters_service import add_new_character
 
 characters_router = APIRouter(prefix="/characters")
 
