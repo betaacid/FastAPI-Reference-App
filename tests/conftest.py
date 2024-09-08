@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+from app.schemas.swapi_character import SwapiCharacter
 from main import app
 from database import get_db_session
 from app.schemas.star_wars_character import (
@@ -32,6 +33,15 @@ def client(mock_db_session):
 def mock_star_wars_character_create() -> StarWarsCharacterCreate:
     return StarWarsCharacterCreate(
         name="Leia Organa",
+    )
+
+
+@pytest.fixture(scope="function")
+def mock_swapi_character() -> StarWarsCharacterCreate:
+    return SwapiCharacter(
+        name="Leia Organa",
+        height="150",
+        mass="49",
     )
 
 

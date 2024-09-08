@@ -13,6 +13,11 @@ def add_new_character(
     db: Session,
 ) -> StarWarsCharacterRead:
     swapi_json = swapi_networking_client.get_character_from_swapi(input_character.name)
-    print(swapi_json)
-    new_character: StarWarsCharacter = insert_new_character(db, input_character)
-    return StarWarsCharacterRead.model_validate(new_character)
+    try:
+        swapi_character = swapi_networking_client.transform_swapi_json_to_pydantic(
+            swapi_json
+        )
+        new_character: StarWarsCharacter = insert_new_character(db, swapi_character)
+        return StarWarsCharacterRead.model_validate(new_character)
+    except ValueError as e:
+        raise ValueError(f"Error while fetching character from SWAPI: {e}")

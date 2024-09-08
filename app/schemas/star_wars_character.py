@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
 class StarWarsCharacterBase(BaseModel):
@@ -7,9 +8,6 @@ class StarWarsCharacterBase(BaseModel):
 
 class StarWarsCharacterCreate(StarWarsCharacterBase):
     pass
-
-
-from typing import Optional
 
 
 class StarWarsCharacterRead(StarWarsCharacterBase):
