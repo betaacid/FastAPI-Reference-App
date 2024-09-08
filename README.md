@@ -52,9 +52,9 @@ We follow a **test-driven development (TDD)** approach with a strong emphasis on
 ## Naming
 To ensure that the file names clearly describe their purpose, we follow a naming convention that reflects the functionality of each file. This helps maintain clarity, especially in larger projects. Here's how we structure the file names:
 
-**Services**: These files coordinate the logic and interactions between external systems, databases, and internal business logic. We name them based on the service they provide. For example, instead of service/character.py, we would use service/character_service.py, making it clear that this file handles business logic related to Star Wars characters.
+**Services**: These files coordinate the logic and interactions between external systems, databases, and internal business logic. We name them based on the service they provide. For example, instead of `service/character.py`, we would use `service/character_service.py`, making it clear that this file handles business logic related to Star Wars characters.
 
-**Routers**: These files define the API endpoints. We include "router" in the file name to clarify that this file handles route definitions. Instead of router/character.py, we would name it router/character_router.py.
+**Routers**: These files define the API endpoints. We include "router" in the file name to clarify that this file handles route definitions. Instead of `router/character.py`, we would name it `router/character_router.py`.
 
 ## Application Structure
 
