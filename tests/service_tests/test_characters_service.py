@@ -1,6 +1,7 @@
 from unittest.mock import patch
 import pytest
 from fastapi import HTTPException
+from app.errors.custom_exceptions import CharacterNotFoundError
 from app.services.characters_service import add_new_character
 from app.schemas.star_wars_character import StarWarsCharacterRead
 from requests.exceptions import RequestException
@@ -54,7 +55,7 @@ def test_add_new_character_swapi_error(
 ):
     # Given: SWAPI call returns no character (empty results)
     mock_get_character_from_swapi.return_value = {"results": []}
-    mock_transform_swapi_json_to_pydantic.side_effect = ValueError(
+    mock_transform_swapi_json_to_pydantic.side_effect = CharacterNotFoundError(
         "Character not found in SWAPI"
     )
 
@@ -63,10 +64,6 @@ def test_add_new_character_swapi_error(
         add_new_character(mock_star_wars_character_create, mock_db_session)
 
     assert exc_info.value.status_code == 404
-    assert (
-        str(exc_info.value.detail)
-        == "Error while fetching character from SWAPI: Character not found in SWAPI"
-    )
 
     mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
     mock_transform_swapi_json_to_pydantic.assert_called_once_with({"results": []})

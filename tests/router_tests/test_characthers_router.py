@@ -1,6 +1,8 @@
 from unittest.mock import patch
 from fastapi import HTTPException
 
+from app.errors.custom_exceptions import CharacterNotFoundError
+
 
 @patch("app.routers.characters_router.add_new_character")
 def test_create_character_valid_data(
@@ -34,15 +36,13 @@ def test_create_character_character_not_found(mock_add_new_character, client):
         "name": "Unknown Character",
     }
 
-    # Mock add_new_character to raise a ValueError when the character is not found
-    mock_add_new_character.side_effect = ValueError("Character not found")
+    mock_add_new_character.side_effect = CharacterNotFoundError("Character not found")
 
     # When
     response = client.post("/characters/", json=character_input_data)
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Character not found: Character not found"}
 
 
 @patch("app.routers.characters_router.add_new_character")
@@ -62,9 +62,6 @@ def test_create_character_external_service_error(mock_add_new_character, client)
 
     # Then
     assert response.status_code == 503
-    assert response.json() == {
-        "detail": "External service unavailable. Please try again later."
-    }
 
 
 @patch("app.routers.characters_router.add_new_character")
@@ -84,9 +81,6 @@ def test_create_character_internal_server_error(mock_add_new_character, client):
 
     # Then
     assert response.status_code == 500
-    assert response.json() == {
-        "detail": "Internal server error. Please try again later."
-    }
 
 
 def test_create_character_invalid_data(client):

@@ -6,6 +6,7 @@ from app.schemas.star_wars_character import (
 )
 from app.services.characters_service import add_new_character
 from database import get_db_session
+from app.errors.custom_exceptions import CharacterNotFoundError
 from requests.exceptions import RequestException
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -19,6 +20,11 @@ async def create_character(
 ) -> StarWarsCharacterRead:
     try:
         return add_new_character(input_character, db)
+    except CharacterNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Character not found: {e}",
+        )
     except RequestException:
         raise HTTPException(
             status_code=503,
@@ -28,5 +34,3 @@ async def create_character(
         raise HTTPException(
             status_code=500, detail="Internal server error. Please try again later."
         )
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=f"Character not found: {e}")

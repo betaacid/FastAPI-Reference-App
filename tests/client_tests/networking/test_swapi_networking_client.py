@@ -6,6 +6,7 @@ from app.clients.networking.swapi_networking_client import (
     transform_swapi_json_to_pydantic,
 )
 from app.schemas.swapi_character import SwapiCharacter
+from app.errors.custom_exceptions import CharacterNotFoundError
 
 SWAPI_BASE_URL = "https://swapi.dev/api/people/"
 
@@ -52,10 +53,8 @@ def test_get_character_from_swapi_error():
         responses.GET, search_url, json={"detail": "Internal Server Error"}, status=500
     )
 
-    try:
+    with pytest.raises(requests.HTTPError):
         get_character_from_swapi("vader")
-    except requests.HTTPError:
-        pass
 
     assert responses.calls[0].request.url == search_url
     assert len(responses.calls) == 1
@@ -76,8 +75,8 @@ def test_transform_swapi_json_to_pydantic_no_results():
     # Given: A response with no results
     mock_empty_response = {"count": 0, "results": []}
 
-    # When / Then:
-    with pytest.raises(ValueError, match="No character found in SWAPI response"):
+    # When / Then: Expect a CharacterNotFoundError to be raised
+    with pytest.raises(CharacterNotFoundError):
         transform_swapi_json_to_pydantic(mock_empty_response)
 
 
