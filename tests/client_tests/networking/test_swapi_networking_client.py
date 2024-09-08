@@ -1,6 +1,11 @@
+import pytest
 import responses
 import requests
-from app.clients.networking.swapi_networking_client import get_character_from_swapi
+from app.clients.networking.swapi_networking_client import (
+    get_character_from_swapi,
+    transform_swapi_json_to_pydantic,
+)
+from app.schemas.swapi_character import SwapiCharacter
 
 SWAPI_BASE_URL = "https://swapi.dev/api/people/"
 
@@ -54,3 +59,46 @@ def test_get_character_from_swapi_error():
 
     assert responses.calls[0].request.url == search_url
     assert len(responses.calls) == 1
+
+
+def test_transform_swapi_json_to_pydantic_valid(mock_swapi_response):
+    # When: The SWAPI response is valid
+    result = transform_swapi_json_to_pydantic(mock_swapi_response)
+
+    # Then: Ensure the result is a valid SwapiCharacter model
+    assert isinstance(result, SwapiCharacter)
+    assert result.name == "Darth Vader"
+    assert result.height == "202"
+    assert result.mass == "136"
+
+
+def test_transform_swapi_json_to_pydantic_no_results():
+    # Given: A response with no results
+    mock_empty_response = {"count": 0, "results": []}
+
+    # When / Then:
+    with pytest.raises(ValueError, match="No character found in SWAPI response"):
+        transform_swapi_json_to_pydantic(mock_empty_response)
+
+
+def test_transform_swapi_json_to_pydantic_missing_fields():
+    # Given: A response with missing fields (e.g., missing 'mass')
+    mock_response_missing_fields = {
+        "count": 1,
+        "results": [
+            {
+                "name": "Luke Skywalker",
+                "height": "172",
+                # 'mass' is missing
+            }
+        ],
+    }
+
+    # When:
+    result = transform_swapi_json_to_pydantic(mock_response_missing_fields)
+
+    # Then:
+    assert isinstance(result, SwapiCharacter)
+    assert result.name == "Luke Skywalker"
+    assert result.height == "172"
+    assert result.mass is None
