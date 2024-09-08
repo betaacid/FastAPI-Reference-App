@@ -6,6 +6,8 @@ from app.schemas.star_wars_character import (
 )
 from app.services.characters_service import add_new_character
 from database import get_db_session
+from requests.exceptions import RequestException
+from sqlalchemy.exc import SQLAlchemyError
 
 characters_router = APIRouter(prefix="/characters")
 
@@ -17,7 +19,14 @@ async def create_character(
 ) -> StarWarsCharacterRead:
     try:
         return add_new_character(input_character, db)
-    except ValueError as e:
+    except RequestException:
         raise HTTPException(
-            status_code=404, detail=f"Error while fetching character from SWAPI: {e}"
+            status_code=503,
+            detail="External service unavailable. Please try again later.",
         )
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=500, detail="Internal server error. Please try again later."
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=f"Character not found: {e}")

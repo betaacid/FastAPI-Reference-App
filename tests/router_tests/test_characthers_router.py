@@ -35,15 +35,57 @@ def test_create_character_character_not_found(mock_add_new_character, client):
     }
 
     # Mock add_new_character to raise a ValueError when the character is not found
-    mock_add_new_character.side_effect = ValueError("Character not found in SWAPI")
+    mock_add_new_character.side_effect = ValueError("Character not found")
 
     # When
     response = client.post("/characters/", json=character_input_data)
 
     # Then
     assert response.status_code == 404
+    assert response.json() == {"detail": "Character not found: Character not found"}
+
+
+@patch("app.routers.characters_router.add_new_character")
+def test_create_character_external_service_error(mock_add_new_character, client):
+    # Given
+    character_input_data = {
+        "name": "Leia Organa",
+    }
+
+    # Mock add_new_character to raise a RequestException (simulating an external service error)
+    mock_add_new_character.side_effect = HTTPException(
+        status_code=503, detail="External service unavailable. Please try again later."
+    )
+
+    # When
+    response = client.post("/characters/", json=character_input_data)
+
+    # Then
+    assert response.status_code == 503
     assert response.json() == {
-        "detail": "Error while fetching character from SWAPI: Character not found in SWAPI"
+        "detail": "External service unavailable. Please try again later."
+    }
+
+
+@patch("app.routers.characters_router.add_new_character")
+def test_create_character_internal_server_error(mock_add_new_character, client):
+    # Given
+    character_input_data = {
+        "name": "Leia Organa",
+    }
+
+    # Mock add_new_character to raise a SQLAlchemyError (simulating a database error)
+    mock_add_new_character.side_effect = HTTPException(
+        status_code=500, detail="Internal server error. Please try again later."
+    )
+
+    # When
+    response = client.post("/characters/", json=character_input_data)
+
+    # Then
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "Internal server error. Please try again later."
     }
 
 

@@ -1,7 +1,10 @@
 from unittest.mock import patch
 import pytest
+from fastapi import HTTPException
 from app.services.characters_service import add_new_character
 from app.schemas.star_wars_character import StarWarsCharacterRead
+from requests.exceptions import RequestException
+from sqlalchemy.exc import SQLAlchemyError
 
 
 @patch("app.services.characters_service.get_character_from_swapi")
@@ -55,12 +58,15 @@ def test_add_new_character_swapi_error(
         "Character not found in SWAPI"
     )
 
-    # When / Then: Expect a ValueError when the character is not found
-    with pytest.raises(
-        ValueError,
-        match="Error while fetching character from SWAPI: Character not found in SWAPI",
-    ):
+    # When / Then: Expect an HTTPException (404 Not Found) when the character is not found
+    with pytest.raises(HTTPException) as exc_info:
         add_new_character(mock_star_wars_character_create, mock_db_session)
+
+    assert exc_info.value.status_code == 404
+    assert (
+        str(exc_info.value.detail)
+        == "Error while fetching character from SWAPI: Character not found in SWAPI"
+    )
 
     mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
     mock_transform_swapi_json_to_pydantic.assert_called_once_with({"results": []})
@@ -82,11 +88,14 @@ def test_add_new_character_db_insert_error(
     mock_transform_swapi_json_to_pydantic.return_value = mock_swapi_character
 
     # Simulate a database insertion error
-    mock_insert_new_character.side_effect = Exception("Database insertion error")
+    mock_insert_new_character.side_effect = SQLAlchemyError("Database insertion error")
 
-    # When / Then: Expect an exception to be raised
-    with pytest.raises(Exception, match="Database insertion error"):
+    # When / Then: Expect an HTTPException (500 Internal Server Error) to be raised
+    with pytest.raises(HTTPException) as exc_info:
         add_new_character(mock_star_wars_character_create, mock_db_session)
+
+    assert exc_info.value.status_code == 500
+    assert str(exc_info.value.detail) == "Database error: Database insertion error"
 
     mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
     mock_transform_swapi_json_to_pydantic.assert_called_once_with(
@@ -95,3 +104,24 @@ def test_add_new_character_db_insert_error(
     mock_insert_new_character.assert_called_once_with(
         mock_db_session, mock_swapi_character
     )
+
+
+@patch("app.services.characters_service.get_character_from_swapi")
+@patch("app.services.characters_service.transform_swapi_json_to_pydantic")
+def test_add_new_character_networking_error(
+    mock_transform_swapi_json_to_pydantic,
+    mock_get_character_from_swapi,
+    mock_db_session,
+    mock_star_wars_character_create,
+):
+    # Simulate a networking error (e.g., SWAPI is down)
+    mock_get_character_from_swapi.side_effect = RequestException("Network error")
+
+    # When / Then: Expect an HTTPException (503 Service Unavailable) to be raised
+    with pytest.raises(HTTPException) as exc_info:
+        add_new_character(mock_star_wars_character_create, mock_db_session)
+
+    assert exc_info.value.status_code == 503
+    assert str(exc_info.value.detail) == "SWAPI service unavailable: Network error"
+
+    mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
