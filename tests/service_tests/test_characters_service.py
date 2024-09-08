@@ -1,10 +1,7 @@
 from unittest.mock import patch
 import pytest
 from app.services.characters_service import add_new_character
-from app.schemas.star_wars_character import (
-    StarWarsCharacterCreate,
-    StarWarsCharacterRead,
-)
+from app.schemas.star_wars_character import StarWarsCharacterRead
 
 
 @patch("app.services.characters_service.get_character_from_swapi")
