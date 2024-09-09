@@ -33,7 +33,7 @@ This project serves as a **reference architecture** to demonstrate best practice
 
 ## Testing Strategy
 
-We follow a **test-driven development (TDD)** approach with a strong emphasis on **unit tests**. The goal is to achieve **high test coverage** with mocked dependencies at every layer, ensuring that each component works in isolation.
+The goal is to achieve **high test coverage** with mocked dependencies at every layer, ensuring that each component works in isolation.
 ****
 ### Unit Tests
 
