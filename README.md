@@ -31,6 +31,8 @@ The application allows users to enter the name of a Star Wars character, which t
 
 This project serves as a **reference architecture** to demonstrate best practices for organizing FastAPI projects, focusing on separation of concerns, testing strategies, and modularization.
 
+Note that type safety should be used whenever possible including parameters and return types. 
+
 ## Testing Strategy
 
 The goal is to achieve **high test coverage** with mocked dependencies at every layer, ensuring that each component works in isolation.
