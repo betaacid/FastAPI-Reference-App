@@ -43,8 +43,8 @@ The goal is to achieve **high test coverage** with mocked dependencies at every 
 - No external service calls are made during unit tests.
 
 ### Integration Tests
-
-- **Few integration tests** are written to test the entire flow with real API calls and database interactions.
+- Integration testing will be handled by the front end's end-to-end testing.
+- In the case where we can not perform front end tests, use a **few integration tests**  to test the entire flow with real API calls and database interactions.
 - These tests are minimal and only serve as sanity checks to ensure the app functions as expected in a real-world scenario.
 - Integration tests ensure that the different layers of the architecture work together correctly.
 
