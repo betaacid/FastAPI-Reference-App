@@ -24,11 +24,6 @@ def add_new_character(
     swapi_json = get_character_from_swapi(input_character.name)
     swapi_character = transform_swapi_json_to_pydantic(swapi_json)
     swapi_character.name = format_star_wars_name(swapi_character.name)
-
-    try:
-        new_character: StarWarsCharacter = insert_new_character(db, swapi_character)
-
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    new_character: StarWarsCharacter = insert_new_character(db, swapi_character)
 
     return StarWarsCharacterRead.model_validate(new_character)
