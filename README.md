@@ -40,7 +40,6 @@ The goal is to achieve **high test coverage** with mocked dependencies at every 
 - Each layer of the architecture (clients, services, routers, etc.) is tested individually.
 - All dependencies, including external services like SWAPI and database calls, are mocked in unit tests.
 - We only test **public methods** to avoid coupling tests to internal implementation details, 
-- We **use mocks** to verify that external services or databases are called with the correct parameters.
 - No external service calls are made during unit tests.
 
 ### Integration Tests

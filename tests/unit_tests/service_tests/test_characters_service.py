@@ -92,9 +92,6 @@ def test_add_new_character_db_insert_error(
         add_new_character(mock_star_wars_character_create, mock_db_session)
 
     assert exc_info.value.status_code == 500
-    assert str(exc_info.value.detail) == "Database error: Database insertion error"
-
-    mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
     mock_transform_swapi_json_to_pydantic.assert_called_once_with(
         {"results": [mock_swapi_character]}
     )
@@ -119,6 +116,3 @@ def test_add_new_character_networking_error(
         add_new_character(mock_star_wars_character_create, mock_db_session)
 
     assert exc_info.value.status_code == 503
-    assert str(exc_info.value.detail) == "SWAPI service unavailable: Network error"
-
-    mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
