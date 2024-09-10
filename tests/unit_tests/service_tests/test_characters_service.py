@@ -47,30 +47,6 @@ def test_add_new_character_success(
 
 @patch("app.services.characters_service.get_character_from_swapi")
 @patch("app.services.characters_service.transform_swapi_json_to_pydantic")
-def test_add_new_character_swapi_error(
-    mock_transform_swapi_json_to_pydantic,
-    mock_get_character_from_swapi,
-    mock_db_session,
-    mock_star_wars_character_create,
-):
-    # Given: SWAPI call returns no character (empty results)
-    mock_get_character_from_swapi.return_value = {"results": []}
-    mock_transform_swapi_json_to_pydantic.side_effect = CharacterNotFoundError(
-        "Character not found in SWAPI"
-    )
-
-    # When / Then: Expect an HTTPException (404 Not Found) when the character is not found
-    with pytest.raises(HTTPException) as exc_info:
-        add_new_character(mock_star_wars_character_create, mock_db_session)
-
-    assert exc_info.value.status_code == 404
-
-    mock_get_character_from_swapi.assert_called_once_with("Leia Organa")
-    mock_transform_swapi_json_to_pydantic.assert_called_once_with({"results": []})
-
-
-@patch("app.services.characters_service.get_character_from_swapi")
-@patch("app.services.characters_service.transform_swapi_json_to_pydantic")
 @patch("app.services.characters_service.insert_new_character")
 def test_add_new_character_db_insert_error(
     mock_insert_new_character,

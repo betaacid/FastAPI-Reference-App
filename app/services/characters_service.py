@@ -28,17 +28,6 @@ def add_new_character(
     except RequestException as e:
         raise HTTPException(status_code=503, detail=f"SWAPI service unavailable: {e}")
 
-    except CharacterNotFoundError as e:
-        raise HTTPException(
-            status_code=404, detail=f"Character not found in SWAPI: {e}"
-        )
-
-    except SwapiCharacterError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error while transforming character from SWAPI: {e}",
-        )
-
     swapi_character.name = format_star_wars_name(swapi_character.name)
 
     try:
