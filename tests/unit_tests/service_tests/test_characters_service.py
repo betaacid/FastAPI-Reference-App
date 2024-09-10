@@ -74,21 +74,3 @@ def test_add_new_character_db_insert_error(
     mock_insert_new_character.assert_called_once_with(
         mock_db_session, mock_swapi_character
     )
-
-
-@patch("app.services.characters_service.get_character_from_swapi")
-@patch("app.services.characters_service.transform_swapi_json_to_pydantic")
-def test_add_new_character_networking_error(
-    mock_transform_swapi_json_to_pydantic,
-    mock_get_character_from_swapi,
-    mock_db_session,
-    mock_star_wars_character_create,
-):
-    # Simulate a networking error (e.g., SWAPI is down)
-    mock_get_character_from_swapi.side_effect = RequestException("Network error")
-
-    # When / Then: Expect an HTTPException (503 Service Unavailable) to be raised
-    with pytest.raises(HTTPException) as exc_info:
-        add_new_character(mock_star_wars_character_create, mock_db_session)
-
-    assert exc_info.value.status_code == 503

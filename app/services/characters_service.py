@@ -21,13 +21,8 @@ def add_new_character(
     input_character: StarWarsCharacterCreate,
     db: Session,
 ) -> StarWarsCharacterRead:
-    try:
-        swapi_json = get_character_from_swapi(input_character.name)
-        swapi_character = transform_swapi_json_to_pydantic(swapi_json)
-
-    except RequestException as e:
-        raise HTTPException(status_code=503, detail=f"SWAPI service unavailable: {e}")
-
+    swapi_json = get_character_from_swapi(input_character.name)
+    swapi_character = transform_swapi_json_to_pydantic(swapi_json)
     swapi_character.name = format_star_wars_name(swapi_character.name)
 
     try:
