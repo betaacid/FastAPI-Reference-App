@@ -5,7 +5,7 @@ from app.clients.networking.swapi_networking_client import (
     get_character_from_swapi,
     transform_swapi_json_to_pydantic,
 )
-from app.schemas.swapi_character import SwapiCharacter
+from app.schemas.swapi_character_schema import SwapiCharacter
 from app.errors.custom_exceptions import CharacterNotFoundError
 
 SWAPI_BASE_URL = "https://swapi.dev/api/people/"

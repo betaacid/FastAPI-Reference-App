@@ -3,7 +3,7 @@ import pytest
 from fastapi import HTTPException
 from app.errors.custom_exceptions import CharacterNotFoundError
 from app.services.characters_service import add_new_character
-from app.schemas.star_wars_character import StarWarsCharacterRead
+from app.schemas.star_wars_character_schema import StarWarsCharacterRead
 from requests.exceptions import RequestException
 from sqlalchemy.exc import SQLAlchemyError
 

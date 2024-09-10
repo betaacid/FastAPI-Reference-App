@@ -2,7 +2,7 @@ import requests
 from typing import Dict
 
 from app.errors.custom_exceptions import CharacterNotFoundError, SwapiCharacterError
-from app.schemas.swapi_character import SwapiCharacter
+from app.schemas.swapi_character_schema import SwapiCharacter
 
 SWAPI_BASE_URL = "https://swapi.dev/api/people/"
 

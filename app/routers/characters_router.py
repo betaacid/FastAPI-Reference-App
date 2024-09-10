@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.schemas.star_wars_character import (
+from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )

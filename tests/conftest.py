@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.schemas.swapi_character import SwapiCharacter
+from app.schemas.swapi_character_schema import SwapiCharacter
 from main import app
 from database import get_db_session
-from app.schemas.star_wars_character import (
+from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )

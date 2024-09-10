@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 from alembic import context
 
-from app.models.star_wars_character import StarWarsCharacter
+from app.models.star_wars_character_model import StarWarsCharacter
 from database import Base
 
 # Import your SQLAlchemy Base (where your models are defined)

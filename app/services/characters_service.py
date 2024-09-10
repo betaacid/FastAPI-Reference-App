@@ -4,11 +4,11 @@ from app.clients.networking.swapi_networking_client import (
     transform_swapi_json_to_pydantic,
 )
 from app.errors.custom_exceptions import CharacterNotFoundError, SwapiCharacterError
-from app.schemas.star_wars_character import (
+from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from app.models.star_wars_character import StarWarsCharacter
+from app.models.star_wars_character_model import StarWarsCharacter
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from requests.exceptions import RequestException
