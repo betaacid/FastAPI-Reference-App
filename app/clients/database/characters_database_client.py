@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from app.models.star_wars_character_model import StarWarsCharacter
-from app.schemas.star_wars_character_schema import StarWarsCharacterCreate
 from app.schemas.swapi_character_schema import SwapiCharacter
 
 
