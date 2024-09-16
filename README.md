@@ -93,7 +93,7 @@ The service layer acts as the **main coordinator** of business logic. It handles
 ```python
 def add_new_character(input_character: StarWarsCharacterCreate, db: Session) -> StarWarsCharacterRead:
     swapi_json = get_character_from_swapi(input_character.name)
-    swapi_character = transform_swapi_json_to_pydantic(swapi_json)
+    swapi_character = transform_swapi_character_json_to_pydantic(swapi_json)
     formatted_name = format_star_wars_name(swapi_character.name)
     swapi_character.name = formatted_name
     return insert_new_character(db, swapi_character)
