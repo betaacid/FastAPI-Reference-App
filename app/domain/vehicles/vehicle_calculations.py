@@ -3,10 +3,10 @@ from app.schemas.swapi_vehicle_schema import SwapiVehicle
 
 def convert_consumables_to_days(consumables: str) -> int:
     """
-    Converte o valor de consumables para dias.
+    Converts the value of consumables to days.
 
-    :param consumables: String representando o tempo de consumíveis (ex: "2 months")
-    :return: Número de dias
+    :param consumables: String representing the consumables time (e.g., "2 months")
+    :return: Number of days
     """
     time_units = {
         "day": 1,
@@ -25,10 +25,10 @@ def convert_consumables_to_days(consumables: str) -> int:
 
 def calculate_vehicle_efficiency(vehicle: SwapiVehicle) -> float:
     """
-    Calcula a eficiência de um veículo com base em seus atributos.
+    Calculates the efficiency of a vehicle based on its attributes.
 
-    :param vehicle: Instância de StarWarsVehicle
-    :return: Eficiência calculada do veículo
+    :param vehicle: Instance of SwapiVehicle
+    :return: Calculated efficiency of the vehicle
     """
     try:
         cargo_capacity = float(vehicle.cargo_capacity)
@@ -36,10 +36,10 @@ def calculate_vehicle_efficiency(vehicle: SwapiVehicle) -> float:
         passengers = int(vehicle.passengers)
         consumables = vehicle.consumables
 
-        # Converter consumables para dias
+        # Convert consumables to days
         consumables_days = convert_consumables_to_days(consumables)
 
-        # Calcular a eficiência como uma função de capacidade de carga, tripulação, passageiros e consumíveis
+        # Calculate efficiency as a function of cargo capacity, crew, passengers, and consumables
         efficiency = (cargo_capacity / (crew + passengers)) / consumables_days
     except (ValueError, ZeroDivisionError):
         efficiency = 0.0
