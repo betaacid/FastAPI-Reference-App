@@ -1,7 +1,12 @@
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.errors.custom_exceptions import SwapiCharacterError, CharacterNotFoundError
+from app.errors.custom_exceptions import (
+    SwapiCharacterError,
+    CharacterNotFoundError,
+    VehicleNotFoundError,
+    SwapiVehicleError,
+)
 
 
 def swapi_character_error_handler(
@@ -21,6 +26,26 @@ def character_not_found_error_handler(
     return JSONResponse(
         status_code=404,
         content={"message": "Character not found in SWAPI."},
+    )
+
+
+def swapi_vehicle_error_handler(
+    request: Request, exc: SwapiVehicleError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={
+            "message": "An error occurred while fetching or parsing a SWAPI vehicle."
+        },
+    )
+
+
+def vehicle_not_found_error_handler(
+    request: Request, exc: VehicleNotFoundError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=404,
+        content={"message": "Vehicle not found in SWAPI."},
     )
 
 
