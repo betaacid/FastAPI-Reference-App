@@ -1,4 +1,3 @@
-
 # FastAPI SWAPI Character Application
 
 This project is a **reference architecture** for building FastAPI applications at Beta Acid. It demonstrates a clean, maintainable structure for a FastAPI app where users can enter a character name, which triggers a call to the [SWAPI API](https://swapi.dev) to fetch details about the character and store them in a database. 
@@ -18,6 +17,8 @@ This project is a **reference architecture** for building FastAPI applications a
     - [Router File](#router-file)
     - [Service Layer](#service-layer)
     - [Clients](#clients)
+    - [Domain Logic](#domain-logic)
+    - [Utils](#utils)
   - [Installation and running](#installation-and-running)
   - [Running Tests](#running-tests)
 
@@ -110,6 +111,41 @@ def get_character_from_swapi(name: str) -> dict:
     response = requests.get(f"https://swapi.dev/api/people/?search={name}")
     response.raise_for_status()
     return response.json()
+```
+
+### Domain Logic
+
+The domain logic is responsible for handling business rules and calculations. This is distinct from utility functions, which are generally used for tasks like formatting. The domain logic ensures that the core business rules are applied consistently across the application.
+
+For example, the `vehicle_calculations.py` file handles calculations related to vehicle efficiency:
+
+```python
+def convert_consumables_to_days(consumables: str) -> int:
+    time_units = {
+        "day": 1,
+        "days": 1,
+        "week": 7,
+        "weeks": 7,
+        "month": 30,
+        "months": 30,
+        "year": 365,
+        "years": 365,
+    }
+
+    number, unit = consumables.split()
+    return int(number) * time_units[unit]
+```
+
+### Utils
+
+Utility functions are used for common tasks that are shared across different parts of the application. These functions are generally stateless and reusable.
+
+For example, the `characters_utils.py` file contains a utility function for formatting Star Wars character names:
+
+```python
+def format_star_wars_name(name: str) -> str:
+    # Implementation details omitted for brevity
+    return formatted_name
 ```
 
 ## Installation and running
