@@ -25,7 +25,8 @@ def test_create_character_valid_data(
         "id": mock_star_wars_character_read.id,
         "name": mock_star_wars_character_read.name,
         "height": mock_star_wars_character_read.height,
-        "mass": None,
+        "mass": mock_star_wars_character_read.mass,
+        "force": mock_star_wars_character_read.force,
     }
 
 

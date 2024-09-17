@@ -51,6 +51,8 @@ def mock_star_wars_character_read() -> StarWarsCharacterRead:
         id=1,
         name="Darth Vader",
         height="123",
+        mass="136",
+        force=100,
     )
 
 
