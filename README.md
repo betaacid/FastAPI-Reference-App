@@ -14,7 +14,7 @@ This project is a **reference architecture** for building FastAPI applications a
   - [Naming](#naming)
   - [Application Structure](#application-structure)
     - [Main File](#main-file)
-    - [Router File](#router-file)
+    - [Router Files](#router-files)
     - [Service Layer](#service-layer)
     - [Clients](#clients)
     - [Domain Logic](#domain-logic)
@@ -30,7 +30,7 @@ The application allows users to enter the name of a Star Wars character, which t
 3. The character data is stored in a database.
 
 
-This project serves as a **reference architecture** to demonstrate best practices for organizing FastAPI projects, focusing on separation of concerns, testing strategies, and modularization.
+This project serves as a **reference architecture** to demonstrate best practices for organizing FastAPI projects, focusing on separation of concerns, testing strategies, and modularization. This project focuses on application architecture and does not cover CI/CD, deployment, Docker, or other operational best practices.
 
 Note that type safety should be used whenever possible including parameters and return types. 
 
@@ -64,7 +64,7 @@ The application is designed to be modular, with clear separation of concerns. He
 
 ### Main File
 
-The `main.py` file serves as the entry point for the application. It initializes the FastAPI app and includes the necessary routers:
+The `main.py` file serves as the entry point for the application. It initializes the FastAPI app, makes any app-wide configurations, and includes the necessary routers:
 
 ```python
 from fastapi import FastAPI
@@ -75,9 +75,9 @@ app = FastAPI()
 app.include_router(characters_router)
 ```
 
-### Router File
+### Router Files
 
-The router is responsible for defining the API routes. It remains very clean and only handles request validation and forwarding the call to the service layer:
+The routers are responsible for defining the API routes. They remain very clean and only handles request validation and forwarding the call to the service layer:
 
 ```python
 @characters_router.post("/", response_model=StarWarsCharacterRead)
@@ -115,25 +115,12 @@ def get_character_from_swapi(name: str) -> dict:
 
 ### Domain Logic
 
-The domain logic is responsible for handling business rules and calculations. This is distinct from utility functions, which are generally used for tasks like formatting. The domain logic ensures that the core business rules are applied consistently across the application.
+The domain logic is responsible for handling business rules and calculations. The domain logic ensures that the core business rules are applied consistently across the application.
 
 For example, the `vehicle_calculations.py` file handles calculations related to vehicle efficiency:
 
 ```python
 def convert_consumables_to_days(consumables: str) -> int:
-    time_units = {
-        "day": 1,
-        "days": 1,
-        "week": 7,
-        "weeks": 7,
-        "month": 30,
-        "months": 30,
-        "year": 365,
-        "years": 365,
-    }
-
-    number, unit = consumables.split()
-    return int(number) * time_units[unit]
 ```
 
 ### Utils
@@ -144,8 +131,6 @@ For example, the `characters_utils.py` file contains a utility function for form
 
 ```python
 def format_star_wars_name(name: str) -> str:
-    # Implementation details omitted for brevity
-    return formatted_name
 ```
 
 ## Installation and running
