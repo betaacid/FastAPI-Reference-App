@@ -139,13 +139,29 @@ To run the project locally, follow these steps:
 
 1. Clone the repository:
 
-2. Install dependencies:
+2. Create and activate a virtual environment:
+
+   - On macOS/Linux:
+
+     ```bash
+     python -m venv .venv
+     source .venv/bin/activate
+     ```
+
+   - On Windows:
+
+     ```bash
+     python -m venv .venv
+     .venv\Scripts\activate
+     ```
+
+3. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set up the environment variables:
+4. Set up the environment variables:
 
    - Copy the `example.env` file and rename it to `.env`.
    - Edit the `.env` file to include your PostgreSQL connection information:
@@ -154,18 +170,17 @@ To run the project locally, follow these steps:
    DATABASE_URL=postgresql://<username>@localhost/star_wars
    ```
 
-4. Set up the database (using Alembic for migrations):
+5. Set up the database (using Alembic for migrations):
 
    ```bash
    alembic upgrade head
    ```
 
-5. Start the FastAPI application:
+6. Start the FastAPI application:
 
    ```bash
    uvicorn main:app --reload
    ```
-
 
 You can now visit `http://127.0.0.1:8000/docs` to interact with the API through the automatically generated Swagger UI.
 
