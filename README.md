@@ -1,6 +1,6 @@
 # FastAPI SWAPI Character Application
 
-This project is a **reference architecture** for building FastAPI applications at [Beta Acid](https://betaacid.co). It demonstrates a clean, maintainable structure for a FastAPI app where users can enter a character name, which triggers a call to the [SWAPI API](https://swapi.dev) to fetch details about the character and store them in a database. Accompanying blog [post]([url](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture)). 
+This project is a **reference architecture** for building FastAPI applications at [Beta Acid](https://betaacid.co). It demonstrates a clean, maintainable structure for a FastAPI app where users can enter a character name, which triggers a call to the [SWAPI API](https://swapi.dev) to fetch details about the character and store them in a database. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture). 
 
 
 ## Table of Contents
