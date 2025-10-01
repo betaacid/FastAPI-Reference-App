@@ -2,6 +2,9 @@ import os
 from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 from alembic import context
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.models.star_wars_character_model import StarWarsCharacter
 from database import Base
