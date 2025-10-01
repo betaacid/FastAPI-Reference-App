@@ -14,6 +14,8 @@ ENV/
 .venv
 .venv/*
 
+.cursor/
+
 # IDEs and Editors
 .vscode/
 .idea/
