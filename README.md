@@ -86,7 +86,7 @@ File names say what they are. `characters_service.py`, not `characters.py`. `cha
 
 ### Unit tests
 
-Each layer is tested in isolation. The router tests override the service with `dependency_overrides` (not `@patch`). The service tests construct the class directly with a mock database client. The database client tests pass in a mock session. No real database, no network calls.
+Each layer is tested in isolation. The router tests override the service with `dependency_overrides`, and the service tests construct the class directly with a mock database client. `@patch` is still used for plain functions like the networking client calls, but the chained `Depends` pattern eliminates it for anything in the DI chain. No real database, no network calls.
 
 ```python
 # Router test: override the service via FastAPI's DI
