@@ -1,19 +1,6 @@
-from fastapi.testclient import TestClient
+def test_create_character_happy_path(integration_client):
+    response = integration_client.post("/characters/", json={"name": "Luke Skywalker"})
 
-from main import app
-
-client = TestClient(app)
-
-
-# Happy path: Test successful character creation
-def test_create_character_happy_path():
-    # Given
-    character_data = {"name": "Luke Skywalker"}
-
-    # When
-    response = client.post("/characters/", json=character_data)
-
-    # Then
     assert response.status_code == 200
     response_data = response.json()
     assert "id" in response_data
@@ -22,13 +9,9 @@ def test_create_character_happy_path():
     assert "mass" in response_data
 
 
-# Character not found path
-def test_create_character_not_found():
-    # Given
-    non_existent_character_data = {"name": "Unknown Character"}
+def test_create_character_not_found(integration_client):
+    response = integration_client.post(
+        "/characters/", json={"name": "Unknown Character"}
+    )
 
-    # When
-    response = client.post("/characters/", json=non_existent_character_data)
-
-    # Then
     assert response.status_code == 404

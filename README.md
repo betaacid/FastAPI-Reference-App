@@ -1,205 +1,156 @@
 # FastAPI SWAPI Character Application
 
-This project is a **reference architecture** for building FastAPI applications at [Beta Acid](https://betaacid.co). It demonstrates a clean, maintainable structure for a FastAPI app where users can enter a character name, which triggers a call to the [SWAPI API](https://swapi.dev) to fetch details about the character and store them in a database. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture). 
+This is [Beta Acid](https://betaacid.co)'s reference architecture for FastAPI apps. You enter a Star Wars character name, the app fetches their details from the [SWAPI API](https://swapi.dev), and stores them in Postgres. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture).
 
+It's intentionally small. The point is to show how we like to structure things, not to build a real product.
 
-## Table of Contents
+## How it's structured
 
-- [FastAPI SWAPI Character Application](#fastapi-swapi-character-application)
-  - [Table of Contents](#table-of-contents)
-  - [Project Overview](#project-overview)
-  - [Testing Strategy](#testing-strategy)
-    - [Unit Tests](#unit-tests)
-    - [Integration Tests](#integration-tests)
-  - [Naming](#naming)
-  - [Application Structure](#application-structure)
-    - [Main File](#main-file)
-    - [Router Files](#router-files)
-    - [Service Layer](#service-layer)
-    - [Clients](#clients)
-    - [Domain Logic](#domain-logic)
-    - [Utils](#utils)
-  - [Installation and running](#installation-and-running)
-  - [Running Tests](#running-tests)
-
-## Project Overview
-
-The application allows users to enter the name of a Star Wars character, which triggers the following steps:
-1. A call is made to the SWAPI API to fetch the character's data.
-2. The character's name is formatted.
-3. The character data is stored in a database.
-
-
-This project serves as a **reference architecture** to demonstrate best practices for organizing FastAPI projects, focusing on separation of concerns, testing strategies, and modularization. This project focuses on application architecture and does not cover CI/CD, deployment, Docker, or other operational best practices.
-
-Note that type safety should be used whenever possible including parameters and return types. 
-
-## Testing Strategy
-
-The goal is to achieve **high test coverage** with mocked dependencies at every layer, ensuring that each component works in isolation.
-****
-### Unit Tests
-
-- Each layer of the architecture (clients, services, routers, etc.) is tested individually.
-- All dependencies, including external services like SWAPI and database calls, are mocked in unit tests.
-- We only test **public methods** to avoid coupling tests to internal implementation details, 
-- No external service calls are made during unit tests.
-
-### Integration Tests
-- Integration testing will be handled by the front end's end-to-end testing.
-- In the case where we can not perform front end tests, use a **few integration tests**  to test the entire flow with real API calls and database interactions.
-- These tests are minimal and only serve as sanity checks to ensure the app functions as expected in a real-world scenario.
-- Integration tests ensure that the different layers of the architecture work together correctly.
-
-## Naming
-To ensure that the file names clearly describe their purpose, we follow a naming convention that reflects the functionality of each file. This helps maintain clarity, especially in larger projects. Here's how we structure the file names:
-
-**Services**: These files coordinate the logic and interactions between external systems, databases, and internal business logic. We name them based on the service they provide. For example, instead of `service/character.py`, we would use `service/character_service.py`, making it clear that this file handles business logic related to Star Wars characters.
-
-**Routers**: These files define the API endpoints. We include "router" in the file name to clarify that this file handles route definitions. Instead of `router/character.py`, we would name it `router/character_router.py`.
-
-## Application Structure
-
-The application is designed to be modular, with clear separation of concerns. Here's a breakdown of the main components:
-
-### Main File
-
-The `main.py` file serves as the entry point for the application. It initializes the FastAPI app, makes any app-wide configurations, and includes the necessary routers:
-
-```python
-from fastapi import FastAPI
-from app.routers import characters_router
-
-app = FastAPI()
-
-app.include_router(characters_router)
+```
+Router  ->  Service  ->  Database Client  ->  Database
+                \-> Networking Client  ->  SWAPI API
 ```
 
-### Router Files
+Each layer depends only on the one below it. FastAPI's `Depends` wires the chain together automatically:
 
-The routers are responsible for defining the API routes. They remain very clean and only handles request validation and forwarding the call to the service layer:
+- The **router** depends on a service class
+- The **service** depends on a database client class
+- The **database client** depends on the db session
 
 ```python
+# Router only knows about the service
 @characters_router.post("/", response_model=StarWarsCharacterRead)
 async def create_character(
-    input_character: StarWarsCharacterCreate, db: Session = Depends(get_db_session)
+    input_character: StarWarsCharacterCreate,
+    service: CharactersService = Depends(CharactersService),
 ) -> StarWarsCharacterRead:
-    return add_new_character(input_character, db)
+    return service.add_new_character(input_character)
 ```
-
-### Service Layer
-
-The service layer acts as the **main coordinator** of business logic. It handles calls to external services (SWAPI) and the database, formats the character name, and ensures data is processed correctly:
 
 ```python
-def add_new_character(input_character: StarWarsCharacterCreate, db: Session) -> StarWarsCharacterRead:
-    swapi_json = get_character_from_swapi(input_character.name)
-    swapi_character = transform_swapi_character_json_to_pydantic(swapi_json)
-    formatted_name = format_star_wars_name(swapi_character.name)
-    swapi_character.name = formatted_name
-    return insert_new_character(db, swapi_character)
+# Service only knows about the database client
+class CharactersService:
+    def __init__(self, db_client: CharactersDatabaseClient = Depends(CharactersDatabaseClient)):
+        self.db_client = db_client
 ```
-
-### Clients
-
-External dependencies such as SWAPI API calls and database operations are handled in the `clients` directory. Each client is responsible for interacting with a specific external system, ensuring clean separation of concerns.
-
-For example, the `swapi_networking_client.py` handles SWAPI API interactions:
 
 ```python
-def get_character_from_swapi(name: str) -> dict:
-    response = requests.get(f"https://swapi.dev/api/people/?search={name}")
-    response.raise_for_status()
-    return response.json()
+# Database client only knows about the session
+class CharactersDatabaseClient:
+    def __init__(self, db: Session = Depends(get_db_session)):
+        self.db = db
 ```
 
-### Domain Logic
+FastAPI resolves this whole chain for you. The router never touches a db session, and the service never knows how the database client gets its connection. When testing, you can cut the chain at any level.
 
-The domain logic is responsible for handling business rules and calculations. The domain logic ensures that the core business rules are applied consistently across the application.
+## Project layout
 
-For example, the `vehicle_calculations.py` file handles calculations related to vehicle efficiency:
+```
+main.py                             # FastAPI app, router registration, exception handlers
+database.py                         # Engine, session factory, get_db_session dependency
+
+app/
+  routers/                          # API endpoints, thin, just validates and delegates
+  services/                         # Business logic, coordinates between clients
+  clients/
+    database/                       # Database operations (the repository layer)
+    networking/                     # External API calls (SWAPI)
+  models/                           # SQLAlchemy ORM models
+  schemas/                          # Pydantic request/response schemas
+  domain/                           # Pure business rules (e.g. vehicle efficiency calc)
+  utils/                            # Stateless helper functions
+  errors/                           # Custom exceptions and exception handlers
+
+tests/
+  unit_tests/                       # No database, no network, everything mocked
+  integration_tests/                # Real Postgres, real SWAPI, transaction rollback
+```
+
+## Naming
+
+File names say what they are. `characters_service.py`, not `characters.py`. `characters_router.py`, not `router.py`. When you have 30 files open, this matters.
+
+## Testing
+
+### Unit tests
+
+Each layer is tested in isolation. The router tests override the service with `dependency_overrides` (not `@patch`). The service tests construct the class directly with a mock database client. The database client tests pass in a mock session. No real database, no network calls.
 
 ```python
-def convert_consumables_to_days(consumables: str) -> int:
+# Router test: override the service via FastAPI's DI
+mock_service = MagicMock(spec=CharactersService)
+mock_service.add_new_character.return_value = mock_character
+app.dependency_overrides[CharactersService] = lambda: mock_service
 ```
-
-### Utils
-
-Utility functions are used for common tasks that are shared across different parts of the application. These functions are generally stateless and reusable.
-
-For example, the `characters_utils.py` file contains a utility function for formatting Star Wars character names:
 
 ```python
-def format_star_wars_name(name: str) -> str:
+# Service test: construct directly, no FastAPI involved
+mock_db_client = MagicMock(spec=CharactersDatabaseClient)
+service = CharactersService(db_client=mock_db_client)
+result = service.add_new_character(input_data)
 ```
 
-## Installation and running
+Unit tests don't need a `.env` file or a `DATABASE_URL`. The database engine is lazy (only created when actually used), so imports never trigger a connection.
 
-To run the project locally, follow these steps:
+### Integration tests
 
-1. Clone the repository:
+Integration tests hit real Postgres and real SWAPI. Each test runs inside a database transaction that rolls back when the test finishes, so nothing persists.
 
-2. Create and activate a virtual environment:
+The `integration_client` fixture in `tests/integration_tests/conftest.py` handles this. It overrides `get_db_session` with a session bound to an uncommitted transaction, then rolls it back in teardown.
 
-   - On macOS/Linux:
+Integration tests require a `.env` with a valid `DATABASE_URL`.
 
-     ```bash
-     python -m venv .venv
-     source .venv/bin/activate
-     ```
+## Setup
 
-   - On Windows:
+1. Clone the repo
 
-     ```bash
-     python -m venv .venv
-     .venv\Scripts\activate
-     ```
-
-3. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up the environment variables:
-
-   - Copy the `example.env` file and rename it to `.env`.
-   - Edit the `.env` file to include your PostgreSQL connection information:
-
-   ```
-   DATABASE_URL=postgresql://<username>@localhost/star_wars
-   ```
-
-5. Set up the database (using Alembic for migrations):
-
-   ```bash
-   alembic upgrade head
-   ```
-
-6. Start the FastAPI application:
-
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-You can now visit `http://127.0.0.1:8000/docs` to interact with the API through the automatically generated Swagger UI.
-
-## Running Tests
-
-To run all tests, use the following command:
+2. Install [uv](https://docs.astral.sh/uv/) if you don't have it, then install dependencies:
 
 ```bash
-pytest
+uv sync
 ```
 
-To run only the **unit tests**:
+3. Copy `example.env` to `.env` and set your Postgres username:
+
+```
+DATABASE_URL=postgresql://<username>@localhost/star_wars
+```
+
+4. Create the database and run migrations:
 
 ```bash
-pytest tests/unit_tests/
+createdb star_wars
+uv run alembic upgrade head
 ```
 
-To run the **integration tests**:
+5. Start the app:
 
 ```bash
-pytest tests/integration_tests/
+uv run uvicorn main:app --reload
 ```
+
+Then visit `http://127.0.0.1:8000/docs`.
+
+## Running tests
+
+Unit tests (no database required):
+
+```bash
+uv run pytest tests/unit_tests/ -v
+```
+
+Integration tests (requires `.env` with a valid database):
+
+```bash
+uv run pytest tests/integration_tests/ -v
+```
+
+Everything:
+
+```bash
+uv run pytest -v
+```
+
+## Type safety
+
+Use type annotations on parameters and return types. The codebase does this consistently and we'd like to keep it that way.

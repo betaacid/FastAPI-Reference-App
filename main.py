@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, status
 from app.routers.characters_router import characters_router
 from app.errors.exception_handlers import (

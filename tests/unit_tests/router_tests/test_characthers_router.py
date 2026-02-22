@@ -62,6 +62,9 @@ def test_create_character_internal_server_error(client):
 
 
 def test_create_character_invalid_data(client):
+    mock_service = MagicMock(spec=CharactersService)
+    app.dependency_overrides[CharactersService] = lambda: mock_service
+
     response = client.post("/characters/", json={"name": 2})
 
     assert response.status_code == 422
