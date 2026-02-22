@@ -2,7 +2,7 @@
 
 This is [Beta Acid](https://betaacid.co)'s reference architecture for FastAPI apps. You enter a Star Wars character name, the app fetches their details from the [SWAPI API](https://swapi.dev), and stores them in Postgres. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture).
 
-It's intentionally small. The point is to show how we like to structure things, not to build a real product.
+It's intentionally small. The point is to show how we like to structure things, not to build a real product. It covers application architecture only -- not CI/CD, deployment, or Docker.
 
 ## How it's structured
 
@@ -65,6 +65,18 @@ tests/
   unit_tests/                       # No database, no network, everything mocked
   integration_tests/                # Real Postgres, real SWAPI, transaction rollback
 ```
+
+## Stack and layers
+
+**Models and schemas** -- SQLAlchemy ORM models (`app/models/`) map to Postgres tables. Pydantic schemas (`app/schemas/`) handle request validation and response serialization. There are two kinds of schemas: app-facing ones like `StarWarsCharacterCreate` / `StarWarsCharacterRead`, and SWAPI-facing ones like `SwapiCharacter` that represent the external API's response shape.
+
+**Networking clients** -- The networking client (`app/clients/networking/`) calls SWAPI using `requests` and parses the JSON into Pydantic schemas. These are plain functions, not classes -- they're not part of the DI chain because they don't need a database session or any injected state.
+
+**Domain logic** -- Pure business rules live in `app/domain/`. The vehicle efficiency calculation is an example: it takes a `SwapiVehicle` and returns a number. No database, no HTTP, no side effects.
+
+**Utils** -- Stateless helpers like name formatting live in `app/utils/`. Same idea as domain logic, but more generic.
+
+**Database** -- Postgres, managed through Alembic migrations. The engine is created lazily in `database.py` so that importing the module doesn't require a `DATABASE_URL` to be set.
 
 ## Naming
 
