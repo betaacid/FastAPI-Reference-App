@@ -1,25 +1,18 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock
 from fastapi import HTTPException
 
+from main import app
 from app.errors.custom_exceptions import CharacterNotFoundError
+from app.services.characters_service import CharactersService
 
 
-@patch("app.routers.characters_router.add_new_character")
-def test_create_character_valid_data(
-    mock_add_new_character, client, mock_star_wars_character_read
-):
-    # Given
-    character_input_data = {
-        "name": "Darth Vader",
-    }
+def test_create_character_valid_data(client, mock_star_wars_character_read):
+    mock_service = MagicMock(spec=CharactersService)
+    mock_service.add_new_character.return_value = mock_star_wars_character_read
+    app.dependency_overrides[CharactersService] = lambda: mock_service
 
-    # Mock the successful return value of add_new_character
-    mock_add_new_character.return_value = mock_star_wars_character_read
+    response = client.post("/characters/", json={"name": "Darth Vader"})
 
-    # When
-    response = client.post("/characters/", json=character_input_data)
-
-    # Then
     assert response.status_code == 200
     assert response.json() == {
         "id": mock_star_wars_character_read.id,
@@ -30,69 +23,46 @@ def test_create_character_valid_data(
     }
 
 
-@patch("app.routers.characters_router.add_new_character")
-def test_create_character_character_not_found(mock_add_new_character, client):
-    # Given
-    character_input_data = {
-        "name": "Unknown Character",
-    }
+def test_create_character_character_not_found(client):
+    mock_service = MagicMock(spec=CharactersService)
+    mock_service.add_new_character.side_effect = CharacterNotFoundError(
+        "Character not found"
+    )
+    app.dependency_overrides[CharactersService] = lambda: mock_service
 
-    mock_add_new_character.side_effect = CharacterNotFoundError("Character not found")
+    response = client.post("/characters/", json={"name": "Unknown Character"})
 
-    # When
-    response = client.post("/characters/", json=character_input_data)
-
-    # Then
     assert response.status_code == 404
 
 
-@patch("app.routers.characters_router.add_new_character")
-def test_create_character_external_service_error(mock_add_new_character, client):
-    # Given
-    character_input_data = {
-        "name": "Leia Organa",
-    }
-
-    # Mock add_new_character to raise a RequestException (simulating an external service error)
-    mock_add_new_character.side_effect = HTTPException(
-        status_code=503, detail="External service unavailable. Please try again later."
+def test_create_character_external_service_error(client):
+    mock_service = MagicMock(spec=CharactersService)
+    mock_service.add_new_character.side_effect = HTTPException(
+        status_code=503,
+        detail="External service unavailable. Please try again later.",
     )
+    app.dependency_overrides[CharactersService] = lambda: mock_service
 
-    # When
-    response = client.post("/characters/", json=character_input_data)
+    response = client.post("/characters/", json={"name": "Leia Organa"})
 
-    # Then
     assert response.status_code == 503
 
 
-@patch("app.routers.characters_router.add_new_character")
-def test_create_character_internal_server_error(mock_add_new_character, client):
-    # Given
-    character_input_data = {
-        "name": "Leia Organa",
-    }
-
-    # Mock add_new_character to raise a SQLAlchemyError (simulating a database error)
-    mock_add_new_character.side_effect = HTTPException(
-        status_code=500, detail="Internal server error. Please try again later."
+def test_create_character_internal_server_error(client):
+    mock_service = MagicMock(spec=CharactersService)
+    mock_service.add_new_character.side_effect = HTTPException(
+        status_code=500,
+        detail="Internal server error. Please try again later.",
     )
+    app.dependency_overrides[CharactersService] = lambda: mock_service
 
-    # When
-    response = client.post("/characters/", json=character_input_data)
+    response = client.post("/characters/", json={"name": "Leia Organa"})
 
-    # Then
     assert response.status_code == 500
 
 
 def test_create_character_invalid_data(client):
-    # Given
-    invalid_character_data = {
-        "name": 2,  # Invalid type for 'name', should be a string
-    }
+    response = client.post("/characters/", json={"name": 2})
 
-    # When
-    response = client.post("/characters/", json=invalid_character_data)
-
-    # Then
     assert response.status_code == 422
     assert "detail" in response.json()
