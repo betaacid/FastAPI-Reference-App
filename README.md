@@ -1,8 +1,8 @@
 # FastAPI SWAPI Character Application
 
-This is [Beta Acid](https://betaacid.co)'s reference architecture for FastAPI apps. You enter a Star Wars character name, the app fetches their details from the [SWAPI API](https://swapi.dev), and stores them in Postgres. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture).
+This is [Beta Acid](https://betaacid.co)'s reference architecture for FastAPI apps. Its a trivial app where you enter a Star Wars character name, the app fetches their details from the [SWAPI API](https://swapi.dev), and stores them in Postgres.
 
-It's intentionally small. The point is to show how we like to structure things, not to build a real product. It covers application architecture only -- not CI/CD, deployment, or Docker.
+It's intentionally small. The point is to show how we like to structure things, not to build a real product. It covers application architecture only -- not CI/CD, deployment, or Docker. Accompanying blog [post](https://betaacid.co/blog/introducing-our-clean-and-modular-fastapi-reference-architecture).
 
 ## How it's structured
 
@@ -162,7 +162,3 @@ Everything:
 ```bash
 uv run pytest -v
 ```
-
-## Type safety
-
-Use type annotations on parameters and return types. The codebase does this consistently and we'd like to keep it that way.
