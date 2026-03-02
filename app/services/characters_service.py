@@ -22,7 +22,7 @@ class CharactersService:
         swapi_json = get_character_from_swapi(input_character.name)
         swapi_character = transform_swapi_character_json_to_pydantic(swapi_json)
         swapi_character.name = format_star_wars_name(swapi_character.name)
-        new_character: StarWarsCharacter = self.db_client.insert_new_character(
+        new_character = self.db_client.insert_new_character(
             swapi_character
         )
 
