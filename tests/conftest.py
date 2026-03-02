@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 from app.schemas.swapi_character_schema import SwapiCharacter
 from main import app
-from database import get_db_session
 from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
@@ -12,17 +11,11 @@ from mock_alchemy.mocking import UnifiedAlchemyMagicMock
 
 @pytest.fixture(scope="function")
 def mock_db_session():
-    mock_db = UnifiedAlchemyMagicMock()
-    return mock_db
+    return UnifiedAlchemyMagicMock()
 
 
 @pytest.fixture(scope="function")
-def client(mock_db_session):
-    def override_get_db_session():
-        yield mock_db_session
-
-    app.dependency_overrides[get_db_session] = override_get_db_session
-
+def client():
     with TestClient(app) as client:
         yield client
 
@@ -37,7 +30,7 @@ def mock_star_wars_character_create() -> StarWarsCharacterCreate:
 
 
 @pytest.fixture(scope="function")
-def mock_swapi_character() -> StarWarsCharacterCreate:
+def mock_swapi_character() -> SwapiCharacter:
     return SwapiCharacter(
         name="Leia Organa",
         height="150",

@@ -1,25 +1,27 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import Optional
+
 
 class StarWarsVehicleBase(BaseModel):
     name: str
-    model: str
-    manufacturer: str
+
 
 class StarWarsVehicleCreate(StarWarsVehicleBase):
     pass
 
+
 class StarWarsVehicleRead(StarWarsVehicleBase):
     id: int
-    cost_in_credits: str
-    length: str
-    max_atmosphering_speed: str
-    crew: str
-    passengers: str
-    cargo_capacity: str
-    consumables: str
-    vehicle_class: str
-    pilots: List[str]
+    model: Optional[str] = None
+    manufacturer: Optional[str] = None
+    cost_in_credits: Optional[str] = None
+    length: Optional[str] = None
+    max_atmosphering_speed: Optional[str] = None
+    crew: Optional[str] = None
+    passengers: Optional[str] = None
+    cargo_capacity: Optional[str] = None
+    consumables: Optional[str] = None
+    vehicle_class: Optional[str] = None
     efficiency: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
