@@ -1,10 +1,8 @@
-from app.clients.database.characters_database_client import CharactersDatabaseClient
+from app.clients.database.characters_database_client import insert_new_character
 
 
 async def test_insert_new_character(mock_db_session, mock_swapi_character):
-    db_client = CharactersDatabaseClient(db=mock_db_session)
-
-    new_character = await db_client.insert_new_character(mock_swapi_character)
+    new_character = await insert_new_character(mock_db_session, mock_swapi_character)
 
     assert new_character.name == mock_swapi_character.name
 
@@ -12,9 +10,7 @@ async def test_insert_new_character(mock_db_session, mock_swapi_character):
 async def test_insert_new_character_session_methods_called(
     mock_db_session, mock_swapi_character
 ):
-    db_client = CharactersDatabaseClient(db=mock_db_session)
-
-    new_character = await db_client.insert_new_character(mock_swapi_character)
+    new_character = await insert_new_character(mock_db_session, mock_swapi_character)
 
     mock_db_session.add.assert_called_once_with(new_character)
     mock_db_session.flush.assert_awaited_once()
