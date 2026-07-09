@@ -2,27 +2,46 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, status
-from app.routers.characters_router import characters_router
-from app.routers.vehicles_router import vehicles_router
-from app.errors.exception_handlers import (
-    swapi_character_error_handler,
-    swapi_vehicle_error_handler,
-    character_not_found_error_handler,
-    vehicle_not_found_error_handler,
-    not_found_error_handler,
-    server_error_handler,
-    index_out_of_range_error_handler,
-)
+from contextlib import asynccontextmanager
 
+import httpx
+from fastapi import FastAPI, status
+
+from app.clients.networking.swapi_networking_client import (
+    SWAPI_BASE_URL,
+    SWAPI_TIMEOUT_SECONDS,
+)
 from app.errors.custom_exceptions import (
+    CharacterNotFoundError,
     SwapiCharacterError,
     SwapiVehicleError,
-    CharacterNotFoundError,
     VehicleNotFoundError,
 )
+from app.errors.exception_handlers import (
+    character_not_found_error_handler,
+    index_out_of_range_error_handler,
+    not_found_error_handler,
+    server_error_handler,
+    swapi_character_error_handler,
+    swapi_vehicle_error_handler,
+    vehicle_not_found_error_handler,
+)
+from app.routers.characters_router import characters_router
+from app.routers.vehicles_router import vehicles_router
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # One shared HTTP client for the app's lifetime: connection pooling,
+    # base URL, and timeout configured in a single place.
+    app.state.http_client = httpx.AsyncClient(
+        base_url=SWAPI_BASE_URL, timeout=SWAPI_TIMEOUT_SECONDS
+    )
+    yield
+    await app.state.http_client.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(characters_router)
 app.include_router(vehicles_router)

@@ -1,17 +1,23 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from app.schemas.swapi_character_schema import SwapiCharacter
-from main import app
+
 from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from mock_alchemy.mocking import UnifiedAlchemyMagicMock
+from app.schemas.swapi_character_schema import SwapiCharacter
+from main import app
 
 
 @pytest.fixture(scope="function")
 def mock_db_session():
-    return UnifiedAlchemyMagicMock()
+    # AsyncSession.add is sync; the I/O methods are coroutines
+    session = MagicMock()
+    session.flush = AsyncMock()
+    session.get = AsyncMock()
+    return session
 
 
 @pytest.fixture(scope="function")

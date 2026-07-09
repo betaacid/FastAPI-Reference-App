@@ -1,15 +1,17 @@
 from unittest.mock import MagicMock
+
 from fastapi import HTTPException
 
-from main import app
+from app.dependencies import get_characters_service
 from app.errors.custom_exceptions import CharacterNotFoundError
 from app.services.characters_service import CharactersService
+from main import app
 
 
 def test_create_character_valid_data(client, mock_star_wars_character_read):
     mock_service = MagicMock(spec=CharactersService)
     mock_service.add_new_character.return_value = mock_star_wars_character_read
-    app.dependency_overrides[CharactersService] = lambda: mock_service
+    app.dependency_overrides[get_characters_service] = lambda: mock_service
 
     response = client.post("/characters/", json={"name": "Darth Vader"})
 
@@ -28,7 +30,7 @@ def test_create_character_character_not_found(client):
     mock_service.add_new_character.side_effect = CharacterNotFoundError(
         "Character not found"
     )
-    app.dependency_overrides[CharactersService] = lambda: mock_service
+    app.dependency_overrides[get_characters_service] = lambda: mock_service
 
     response = client.post("/characters/", json={"name": "Unknown Character"})
 
@@ -41,7 +43,7 @@ def test_create_character_external_service_error(client):
         status_code=503,
         detail="External service unavailable. Please try again later.",
     )
-    app.dependency_overrides[CharactersService] = lambda: mock_service
+    app.dependency_overrides[get_characters_service] = lambda: mock_service
 
     response = client.post("/characters/", json={"name": "Leia Organa"})
 
@@ -54,7 +56,7 @@ def test_create_character_internal_server_error(client):
         status_code=500,
         detail="Internal server error. Please try again later.",
     )
-    app.dependency_overrides[CharactersService] = lambda: mock_service
+    app.dependency_overrides[get_characters_service] = lambda: mock_service
 
     response = client.post("/characters/", json={"name": "Leia Organa"})
 
@@ -63,7 +65,7 @@ def test_create_character_internal_server_error(client):
 
 def test_create_character_invalid_data(client):
     mock_service = MagicMock(spec=CharactersService)
-    app.dependency_overrides[CharactersService] = lambda: mock_service
+    app.dependency_overrides[get_characters_service] = lambda: mock_service
 
     response = client.post("/characters/", json={"name": 2})
 
