@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+
+from app.dependencies import DbSession, SwapiClientDep
 from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from app.services.characters_service import CharactersService
+from app.services import characters_service
 
 characters_router = APIRouter(prefix="/characters")
 
@@ -11,6 +13,7 @@ characters_router = APIRouter(prefix="/characters")
 @characters_router.post("/", response_model=StarWarsCharacterRead)
 async def create_character(
     input_character: StarWarsCharacterCreate,
-    service: CharactersService = Depends(CharactersService),
+    db: DbSession,
+    swapi_client: SwapiClientDep,
 ) -> StarWarsCharacterRead:
-    return service.add_new_character(input_character)
+    return await characters_service.add_new_character(input_character, db, swapi_client)

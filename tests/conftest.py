@@ -1,21 +1,35 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from app.schemas.swapi_character_schema import SwapiCharacter
-from main import app
+
 from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from mock_alchemy.mocking import UnifiedAlchemyMagicMock
+from app.schemas.swapi_character_schema import SwapiCharacter
+from database import get_db_session
+from main import app
 
 
 @pytest.fixture(scope="function")
 def mock_db_session():
-    return UnifiedAlchemyMagicMock()
+    # AsyncSession.add is sync; the I/O methods are coroutines
+    session = MagicMock()
+    session.flush = AsyncMock()
+    session.get = AsyncMock()
+    return session
 
 
 @pytest.fixture(scope="function")
-def client():
+def client(mock_db_session):
+    # Unit tests never touch a real database, so hand the app a mock session
+    # instead of letting get_db_session create an engine
+    async def override_get_db_session():
+        yield mock_db_session
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+
     with TestClient(app) as client:
         yield client
 

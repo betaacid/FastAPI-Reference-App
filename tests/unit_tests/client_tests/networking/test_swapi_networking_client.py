@@ -1,22 +1,30 @@
+import httpx
 import pytest
-import responses
-import requests
+
 from app.clients.networking.swapi_networking_client import (
-    get_character_from_swapi,
+    SWAPI_BASE_URL,
+    SwapiClient,
     transform_swapi_character_json_to_pydantic,
 )
+from app.errors.custom_exceptions import CharacterNotFoundError, SwapiCharacterError
 from app.schemas.swapi_character_schema import SwapiCharacter
-from app.errors.custom_exceptions import CharacterNotFoundError
-
-SWAPI_BASE_URL = "https://swapi.dev/api"
 
 
-@responses.activate
-def test_get_character_from_swapi_success(mock_swapi_response):
-    search_url = f"{SWAPI_BASE_URL}/people/?search=vader"
-    responses.add(responses.GET, search_url, json=mock_swapi_response, status=200)
+def make_swapi_client(handler) -> SwapiClient:
+    """Build a SwapiClient whose httpx client never touches the network."""
+    transport = httpx.MockTransport(handler)
+    return SwapiClient(httpx.AsyncClient(base_url=SWAPI_BASE_URL, transport=transport))
 
-    result = get_character_from_swapi("vader")
+
+async def test_get_character_from_swapi_success(mock_swapi_response):
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/api/people/"
+        assert request.url.params["search"] == "vader"
+        return httpx.Response(200, json=mock_swapi_response)
+
+    swapi_client = make_swapi_client(handler)
+
+    result = await swapi_client.get_character("vader")
 
     assert "results" in result
     assert len(result["results"]) > 0
@@ -26,38 +34,28 @@ def test_get_character_from_swapi_success(mock_swapi_response):
     assert character["height"] == "202"
     assert character["mass"] == "136"
 
-    assert responses.calls[0].request.url == search_url
-    assert len(responses.calls) == 1
 
+async def test_get_character_from_swapi_not_found():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"count": 0, "results": []})
 
-@responses.activate
-def test_get_character_from_swapi_not_found():
-    mock_response_data = {"count": 0, "results": []}
+    swapi_client = make_swapi_client(handler)
 
-    search_url = f"{SWAPI_BASE_URL}/people/?search=unknowncharacter"
-    responses.add(responses.GET, search_url, json=mock_response_data, status=200)
-
-    result = get_character_from_swapi("unknowncharacter")
+    result = await swapi_client.get_character("unknowncharacter")
 
     assert result["count"] == 0
     assert len(result["results"]) == 0
 
-    assert responses.calls[0].request.url == search_url
-    assert len(responses.calls) == 1
 
+async def test_get_character_from_swapi_error():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"detail": "Internal Server Error"})
 
-@responses.activate
-def test_get_character_from_swapi_error():
-    search_url = f"{SWAPI_BASE_URL}/people/?search=vader"
-    responses.add(
-        responses.GET, search_url, json={"detail": "Internal Server Error"}, status=500
-    )
+    swapi_client = make_swapi_client(handler)
 
-    with pytest.raises(requests.HTTPError):
-        get_character_from_swapi("vader")
-
-    assert responses.calls[0].request.url == search_url
-    assert len(responses.calls) == 1
+    # HTTP errors are wrapped into the app's own exception at the client boundary
+    with pytest.raises(SwapiCharacterError):
+        await swapi_client.get_character("vader")
 
 
 def test_transform_swapi_character_json_to_pydantic_valid(mock_swapi_response):
