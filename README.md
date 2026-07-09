@@ -11,42 +11,33 @@ Router  ->  Service  ->  Database Client  ->  Database
                 \-> Networking Client  ->  SWAPI API
 ```
 
-Each layer depends only on the one below it. FastAPI's `Depends` wires the chain together automatically, and all of that wiring lives in one place: `app/dependencies.py`. The services and clients themselves are plain Python classes that never import FastAPI:
+Each layer depends only on the one below it. Services and database clients are module-level functions that receive their dependencies as plain arguments, the same style used by FastAPI's official [full-stack template](https://github.com/fastapi/full-stack-fastapi-template) and [Netflix Dispatch](https://github.com/Netflix/dispatch). FastAPI's `Depends` appears only at the edge: the router injects a database session and the SWAPI client, then passes them down.
 
 ```python
-# Plain Python, no FastAPI imports
-class CharactersService:
-    def __init__(self, db_client: CharactersDatabaseClient, swapi_client: SwapiClient):
-        self.db_client = db_client
-        self.swapi_client = swapi_client
-```
-
-```python
-# app/dependencies.py, the only file that knows about Depends
-def get_characters_db_client(db: DbSession) -> CharactersDatabaseClient:
-    return CharactersDatabaseClient(db)
-
-
-def get_characters_service(
-    db_client: Annotated[CharactersDatabaseClient, Depends(get_characters_db_client)],
-    swapi_client: SwapiClientDep,
-) -> CharactersService:
-    return CharactersService(db_client, swapi_client)
-```
-
-```python
-# Router only knows about the service
+# Router: inject the session and the SWAPI client, delegate to the service
 @characters_router.post("/", response_model=StarWarsCharacterRead)
 async def create_character(
     input_character: StarWarsCharacterCreate,
-    service: Annotated[CharactersService, Depends(get_characters_service)],
+    db: DbSession,
+    swapi_client: SwapiClientDep,
 ) -> StarWarsCharacterRead:
-    return await service.add_new_character(input_character)
+    return await characters_service.add_new_character(input_character, db, swapi_client)
 ```
 
-FastAPI resolves the whole chain for you: `router -> get_characters_service -> get_characters_db_client -> get_db_session`. The router never touches a db session, and the service never knows how the database client gets its connection. When testing, you can cut the chain at any level.
+```python
+# Service: a plain async function, no FastAPI imports
+async def add_new_character(
+    input_character: StarWarsCharacterCreate,
+    db: AsyncSession,
+    swapi_client: SwapiClient,
+) -> StarWarsCharacterRead:
+    swapi_json = await swapi_client.get_character(input_character.name)
+    ...
+```
 
-Nested dependencies don't require classes. `Depends` accepts any callable, and the providers above are plain functions. We use classes for services and clients because they hold injected state (`self.db_client`, `self.db`), not because the DI system demands it. If something holds injected dependencies or a resource like a session or an HTTP client, a class is a good fit. If it's pure calculation, formatting, or parsing, write a plain module function. That's what `app/domain/` and `app/utils/` are.
+The `DbSession` and `SwapiClientDep` annotations live in `app/dependencies.py`, the only file that knows about `Depends`. The SWAPI client is itself built through a nested dependency chain (`router -> get_swapi_client -> get_http_client`), so the router never learns where the shared HTTP client comes from.
+
+Nested dependencies don't require classes. `Depends` accepts any callable, and `get_db_session`, `get_http_client`, and `get_swapi_client` are all plain functions. The one class in the request path is `SwapiClient`, and it earns that by holding real state: the shared `httpx.AsyncClient` with its connection pool, base URL, and timeout. That's the rule throughout the app. A class needs genuine state or a resource to manage; everything else, including business logic, is a module function.
 
 ## Async by default
 
@@ -104,21 +95,20 @@ File names say what they are. `characters_service.py`, not `characters.py`. `cha
 
 ### Unit tests
 
-Each layer is tested in isolation. The router tests override the service's provider function with `dependency_overrides`, and the service tests construct the class directly with mock clients. `@patch` is still used for plain functions like the JSON transforms, but the `Depends` chain eliminates it for anything in the DI graph. None of these tests touch a real database or the network; even the SWAPI client tests run against `httpx.MockTransport`.
+Each layer is tested in isolation. Injected dependencies get swapped through `dependency_overrides` (the shared `client` fixture replaces `get_db_session` with a mock session), and plain functions get mocked with `@patch`. None of these tests touch a real database or the network; even the SWAPI client tests run against `httpx.MockTransport`.
 
 ```python
-# Router test: override the provider function via FastAPI's DI
-mock_service = MagicMock(spec=CharactersService)  # async methods become AsyncMocks
-mock_service.add_new_character.return_value = mock_character
-app.dependency_overrides[get_characters_service] = lambda: mock_service
+# Router test: patch the service function the router delegates to
+@patch("app.services.characters_service.add_new_character", new_callable=AsyncMock)
+def test_create_character_valid_data(mock_add_new_character, client, mock_character):
+    mock_add_new_character.return_value = mock_character
+    response = client.post("/characters/", json={"name": "Darth Vader"})
 ```
 
 ```python
-# Service test: construct directly, no FastAPI involved
-mock_db_client = MagicMock(spec=CharactersDatabaseClient)
-mock_swapi_client = MagicMock(spec=SwapiClient)
-service = CharactersService(db_client=mock_db_client, swapi_client=mock_swapi_client)
-result = await service.add_new_character(input_data)
+# Service test: call the function directly, no FastAPI involved
+mock_swapi_client = MagicMock(spec=SwapiClient)  # async methods become AsyncMocks
+result = await add_new_character(input_data, mock_db_session, mock_swapi_client)
 ```
 
 Async tests run under `pytest-asyncio` in auto mode (configured in `pyproject.toml`), so an `async def` test works without any decorators or markers.

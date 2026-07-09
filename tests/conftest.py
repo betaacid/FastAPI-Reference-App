@@ -8,6 +8,7 @@ from app.schemas.star_wars_character_schema import (
     StarWarsCharacterRead,
 )
 from app.schemas.swapi_character_schema import SwapiCharacter
+from database import get_db_session
 from main import app
 
 
@@ -21,7 +22,14 @@ def mock_db_session():
 
 
 @pytest.fixture(scope="function")
-def client():
+def client(mock_db_session):
+    # Unit tests never touch a real database, so hand the app a mock session
+    # instead of letting get_db_session create an engine
+    async def override_get_db_session():
+        yield mock_db_session
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+
     with TestClient(app) as client:
         yield client
 

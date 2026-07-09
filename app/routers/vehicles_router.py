@@ -1,13 +1,11 @@
-from typing import Annotated
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Depends
-
-from app.dependencies import get_vehicles_service
+from app.dependencies import DbSession, SwapiClientDep
 from app.schemas.star_wars_vehicle_schema import (
     StarWarsVehicleCreate,
     StarWarsVehicleRead,
 )
-from app.services.vehicles_service import VehiclesService
+from app.services import vehicles_service
 
 vehicles_router = APIRouter(prefix="/vehicles")
 
@@ -15,14 +13,15 @@ vehicles_router = APIRouter(prefix="/vehicles")
 @vehicles_router.post("/", response_model=StarWarsVehicleRead)
 async def create_vehicle(
     input_vehicle: StarWarsVehicleCreate,
-    service: Annotated[VehiclesService, Depends(get_vehicles_service)],
+    db: DbSession,
+    swapi_client: SwapiClientDep,
 ) -> StarWarsVehicleRead:
-    return await service.add_new_vehicle(input_vehicle)
+    return await vehicles_service.add_new_vehicle(input_vehicle, db, swapi_client)
 
 
 @vehicles_router.get("/{vehicle_id}", response_model=StarWarsVehicleRead)
 async def read_vehicle(
     vehicle_id: int,
-    service: Annotated[VehiclesService, Depends(get_vehicles_service)],
+    db: DbSession,
 ) -> StarWarsVehicleRead:
-    return await service.get_vehicle_by_id(vehicle_id)
+    return await vehicles_service.get_vehicle_by_id(vehicle_id, db)
