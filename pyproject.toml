@@ -5,19 +5,21 @@ description = "Add your description here"
 requires-python = ">=3.10"
 dependencies = [
     "alembic>=1.18.4",
+    "asyncpg>=0.30.0",
     "fastapi>=0.129.2",
     "httpx>=0.28.1",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
     "python-dotenv>=1.2.1",
-    "requests>=2.32.5",
-    "sqlalchemy>=2.0.46",
+    "sqlalchemy[asyncio]>=2.0.46",
     "uvicorn>=0.41.0",
 ]
 
 [dependency-groups]
 dev = [
-    "mock-alchemy>=0.2.6",
     "pytest>=9.0.2",
-    "responses>=0.26.0",
+    "pytest-asyncio>=1.0.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

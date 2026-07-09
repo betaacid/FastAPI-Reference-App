@@ -1,5 +1,7 @@
-import requests
 from typing import Dict
+
+import httpx
+from pydantic import ValidationError
 
 from app.errors.custom_exceptions import (
     CharacterNotFoundError,
@@ -11,20 +13,34 @@ from app.schemas.swapi_character_schema import SwapiCharacter
 from app.schemas.swapi_vehicle_schema import SwapiVehicle
 
 SWAPI_BASE_URL = "https://swapi.dev/api"
+SWAPI_TIMEOUT_SECONDS = 10.0
 
 
-def get_character_from_swapi(name: str) -> Dict:
-    url = f"{SWAPI_BASE_URL}/people/?search={name}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+class SwapiClient:
+    """Client for the SWAPI API.
 
+    A class because it holds real state: the shared httpx.AsyncClient, which
+    owns the connection pool, base URL, and timeout for all SWAPI calls.
+    """
 
-def get_vehicle_from_swapi(name: str) -> Dict:
-    url = f"{SWAPI_BASE_URL}/vehicles/?search={name}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+    def __init__(self, http_client: httpx.AsyncClient):
+        self.http_client = http_client
+
+    async def get_character(self, name: str) -> Dict:
+        try:
+            response = await self.http_client.get("/people/", params={"search": name})
+            response.raise_for_status()
+        except httpx.HTTPError as e:
+            raise SwapiCharacterError(f"Error fetching character from SWAPI: {e}") from e
+        return response.json()
+
+    async def get_vehicle(self, name: str) -> Dict:
+        try:
+            response = await self.http_client.get("/vehicles/", params={"search": name})
+            response.raise_for_status()
+        except httpx.HTTPError as e:
+            raise SwapiVehicleError(f"Error fetching vehicle from SWAPI: {e}") from e
+        return response.json()
 
 
 def transform_swapi_character_json_to_pydantic(swapi_json: dict) -> SwapiCharacter:
@@ -33,15 +49,15 @@ def transform_swapi_character_json_to_pydantic(swapi_json: dict) -> SwapiCharact
     if not results:
         raise CharacterNotFoundError("Character not found in SWAPI response")
 
+    character_data = results[0]
     try:
-        character_data = results[0]
         return SwapiCharacter(
             name=character_data.get("name"),
             height=character_data.get("height"),
             mass=character_data.get("mass"),
         )
-    except KeyError as e:
-        raise SwapiCharacterError(f"Error parsing SWAPI data: {e}")
+    except ValidationError as e:
+        raise SwapiCharacterError(f"Error parsing SWAPI data: {e}") from e
 
 
 def transform_swapi_vehicle_json_to_pydantic(swapi_json: dict) -> SwapiVehicle:
@@ -50,8 +66,8 @@ def transform_swapi_vehicle_json_to_pydantic(swapi_json: dict) -> SwapiVehicle:
     if not results:
         raise VehicleNotFoundError("Vehicle not found in SWAPI response")
 
+    vehicle_data = results[0]
     try:
-        vehicle_data = results[0]
         return SwapiVehicle(
             name=vehicle_data.get("name"),
             model=vehicle_data.get("model"),
@@ -65,6 +81,5 @@ def transform_swapi_vehicle_json_to_pydantic(swapi_json: dict) -> SwapiVehicle:
             consumables=vehicle_data.get("consumables"),
             vehicle_class=vehicle_data.get("vehicle_class"),
         )
-
-    except KeyError as e:
-        raise SwapiVehicleError(f"Error parsing SWAPI data: {e}")
+    except ValidationError as e:
+        raise SwapiVehicleError(f"Error parsing SWAPI data: {e}") from e

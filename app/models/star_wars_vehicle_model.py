@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Integer, String
+from sqlalchemy import Float, Integer, String
 from database import Base
 
 
@@ -19,4 +19,4 @@ class StarWarsVehicle(Base):
     consumables: Mapped[str] = mapped_column(String, nullable=True)
     vehicle_class: Mapped[str] = mapped_column(String, nullable=True)
     pilots: Mapped[str] = mapped_column(String, nullable=True)
-    efficiency: Mapped[float] = mapped_column(Integer, nullable=True)
+    efficiency: Mapped[float] = mapped_column(Float, nullable=True)

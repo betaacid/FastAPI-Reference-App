@@ -17,8 +17,10 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
-# Load the database URL from environment variables
-database_url = os.getenv("DATABASE_URL")
+# Load the database URL from environment variables. The app connects with the
+# async asyncpg driver; migrations run over a plain sync connection, so strip
+# the driver suffix here rather than complicating Alembic with async plumbing.
+database_url = os.getenv("DATABASE_URL").replace("+asyncpg", "")
 
 # Override the `sqlalchemy.url` in Alembic's config with the environment variable
 config.set_main_option("sqlalchemy.url", database_url)

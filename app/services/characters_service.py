@@ -1,29 +1,26 @@
-from fastapi import Depends
 from app.clients.database.characters_database_client import CharactersDatabaseClient
 from app.clients.networking.swapi_networking_client import (
-    get_character_from_swapi,
+    SwapiClient,
     transform_swapi_character_json_to_pydantic,
 )
 from app.schemas.star_wars_character_schema import (
     StarWarsCharacterCreate,
     StarWarsCharacterRead,
 )
-from app.models.star_wars_character_model import StarWarsCharacter
 from app.utils.characters_utils import format_star_wars_name
 
 
 class CharactersService:
-    def __init__(self, db_client: CharactersDatabaseClient = Depends(CharactersDatabaseClient)):
+    def __init__(self, db_client: CharactersDatabaseClient, swapi_client: SwapiClient):
         self.db_client = db_client
+        self.swapi_client = swapi_client
 
-    def add_new_character(
+    async def add_new_character(
         self, input_character: StarWarsCharacterCreate
     ) -> StarWarsCharacterRead:
-        swapi_json = get_character_from_swapi(input_character.name)
+        swapi_json = await self.swapi_client.get_character(input_character.name)
         swapi_character = transform_swapi_character_json_to_pydantic(swapi_json)
         swapi_character.name = format_star_wars_name(swapi_character.name)
-        new_character = self.db_client.insert_new_character(
-            swapi_character
-        )
+        new_character = await self.db_client.insert_new_character(swapi_character)
 
         return StarWarsCharacterRead.model_validate(new_character)
